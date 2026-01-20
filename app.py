@@ -1,4 +1,3 @@
-# [Developer Ahmed] - Ultimate IG Strike Suite v6.0
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import random
@@ -6,6 +5,7 @@ import time
 
 app = Flask(__name__)
 
+# المحرك البرمجي المطور بواسطة أحمد
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -14,26 +14,76 @@ HTML_TEMPLATE = """
     <title>Strike Control | Ahmed Pro</title>
     <style>
         body { background: #050505; color: #00ff41; font-family: monospace; text-align: center; margin: 0; }
-        .wrapper { border: 2px solid #00ff41; width: 90%; max-width: 550px; margin: 20px auto; padding: 25px; box-shadow: 0 0 25px #00ff41; background: #000; border-radius: 10px; }
-        .title { font-size: 26px; border-bottom: 2px solid #00ff41; padding-bottom: 15px; margin-bottom: 20px; color: #fff; }
-        .counter-box { font-size: 18px; margin-bottom: 20px; color: #fff; background: #111; padding: 10px; border: 1px dashed #00ff41; }
+        .wrapper { border: 2px solid #00ff41; width: 90%; max-width: 500px; margin: 30px auto; padding: 20px; box-shadow: 0 0 20px #00ff41; background: #000; }
+        .title { font-size: 24px; border-bottom: 2px solid #00ff41; padding-bottom: 10px; margin-bottom: 20px; color: #fff; }
+        .counter-box { font-size: 18px; margin-bottom: 15px; color: #fff; background: #111; padding: 10px; border: 1px dashed #00ff41; }
         #strike-count { color: #ff0000; font-weight: bold; font-size: 22px; }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: #111; border: 1px solid #00ff41; color: #00ff41; box-sizing: border-box; }
-        .btns-container { display: flex; gap: 10px; }
-        .action-btn { flex: 2; padding: 18px; background: #00ff41; color: #000; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
-        .stop-btn { flex: 1; padding: 18px; background: #333; color: #fff; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
-        #terminal { height: 180px; overflow-y: auto; background: #000; border: 1px solid #333; margin-top: 20px; padding: 15px; text-align: left; font-size: 12px; color: #fff; }
+        .btns { display: flex; gap: 10px; }
+        .btn-start { flex: 2; padding: 15px; background: #00ff41; color: #000; font-weight: bold; cursor: pointer; border: none; }
+        .btn-stop { flex: 1; padding: 15px; background: #333; color: #fff; font-weight: bold; cursor: pointer; border: none; }
+        #log { height: 150px; overflow-y: auto; background: #000; border: 1px solid #333; margin-top: 15px; padding: 10px; text-align: left; font-size: 11px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="title">CORE ENGINE: AHMED</div>
-        <div class="counter-box">إجمالي البلاغات: <span id="strike-count">0</span></div>
+        <div class="counter-box">Strikes Injected: <span id="strike-count">0</span></div>
         <input type="text" id="target" placeholder="رابط الحساب المستهدف">
         <select id="reason">
-            <option value="1">Spam - إغراق إشعارات</option>
+            <option value="1">Spam - إغراق بلاغات</option>
             <option value="5">Impersonation - انتحال شخصية</option>
             <option value="11">Copyright - حقوق ملكية</option>
+        </select>
+        <div class="btns">
+            <button id="s-btn" class="btn-start" onclick="start()">START ATTACK</button>
+            <button id="p-btn" class="btn-stop" onclick="stop()" disabled>STOP</button>
+        </div>
+        <div id="log">System Ready...</div>
+    </div>
+    <script>
+        let run = false; let count = 0;
+        async function start() {
+            const t = document.getElementById('target').value;
+            if(!t) return alert('أدخل الرابط!');
+            run = true; document.getElementById('s-btn').disabled = true; document.getElementById('p-btn').disabled = false;
+            while(run) {
+                try {
+                    const r = await fetch('/process', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({target: t, reason_id: document.getElementById('reason').value})
+                    });
+                    const d = await r.json();
+                    count++; document.getElementById('strike-count').innerText = count;
+                    document.getElementById('log').innerHTML += `<br>[+] Strike #${count} via ${d.proxy}`;
+                    document.getElementById('log').scrollTo(0, document.getElementById('log').scrollHeight);
+                    await new Promise(res => setTimeout(res, 2000));
+                } catch(e) { run = false; }
+            }
+        }
+        function stop() { run = false; document.getElementById('s-btn').disabled = false; document.getElementById('p-btn').disabled = true; }
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
+
+@app.route('/process', methods=['POST'])
+def process():
+    try:
+        # جلب بروكسي لضمان تجاوز الحماية
+        res = requests.get("https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http", timeout=5)
+        proxy = random.choice(res.text.splitlines())
+    except:
+        proxy = "185.162.230.210:80"
+    return jsonify({"status": "success", "proxy": proxy})
+
+if __name__ == '__main__':
+    app.run()
         </select>
         <div class="btns-container">
             <button id="start-btn" class="action-btn" onclick="startAttack()">إطلاق الهجوم</button>
